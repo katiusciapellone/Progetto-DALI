@@ -1,0 +1,2 @@
+send_message(send_message(proposta(studente3,7),_30769))
+send_message(send_message(update(deterministico,7,non_deterministico,7),studente3))

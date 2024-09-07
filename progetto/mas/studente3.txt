@@ -1,0 +1,43 @@
+:- dynamic ho_progetto/1.
+:- dynamic traccia/1, ho_scelto/1.
+:- dynamic ho_ricevimento/1.
+:- dynamic specifiche_pubblicate/1.
+:- dynamic tempo_attesa/1.
+:- dynamic ho_inviato/1.
+:- dynamic ho_salutato/1.
+
+stato(sveglio).
+ho_salutato(no).
+tempo_attesa(0).
+ho_progetto(no).
+ho_scelto(no).
+specifiche_pubblicate(no).
+ho_ricevimento(no).
+ho_inviato(no). 
+
+sveglia :- stato(sveglio), tempo_attesa(0), ho_salutato(no).
+svegliaI :> write('Ciao a tutti, sono sveglio'), nl, nl, retract(ho_salutato(no)), assert(ho_salutato(si)).
+
+attendoSpecifiche :- ho_progetto(no), specifiche_pubblicate(no), tempo_attesa(T), T < 3, ho_salutato(si).
+attendoSpecificheI :> write('Attendo le specifiche del progetto'), nl, 
+		      sleep(10), tempo_attesa(T), T1 is T+1, retract(tempo_attesa(T)), assert(tempo_attesa(T1)).
+
+pubblicazioneE :> write('Ho visto le specifiche!'), nl, nl, retract(specifiche_pubblicate(no)), assert(specifiche_pubblicate(si)).
+
+noPubblicazione :- specifiche_pubblicate(no), tempo_attesa(T), T >= 3.
+noPubblicazioneI :> write('Il prof non ha pubblicato nulla, mando un messaggio'), nl, messageA(prof, send_message(sollecito, Me)).
+
+scelgoTraccia :- ho_progetto(no), specifiche_pubblicate(si), ho_scelto(no).
+scelgoTracciaI :> write('Ora posso scegliere il progetto'), nl, assert(traccia(7)), write('Ho scelto la traccia: '), write(7), nl, retract(ho_scelto(no)), assert(ho_scelto(si)).
+
+
+contattoProf :- ho_progetto(no), ho_scelto(si), traccia(T), ho_ricevimento(no), ho_inviato(no).
+contattoProfI :> nl, write('Invio proposta al professore'), nl, traccia(T), 
+		 messageA(prof, send_message(proposta(studente3, T), Me)), retract(ho_inviato(no)).
+
+accettataE :> nl, write('Grazie, posso iniziare a lavorare'), nl, retract(ho_progetto(no)), assert(ho_progetto(si)).
+
+rifiutataE :> nl, write('Secondo me la traccia andava bene...'), sleep(5),
+	      messageA(prof, send_message(update(deterministico, 7, non_deterministico, 7), studente3)), 
+	      sleep(20), nl, write('Chiedo scusa per aver provato a falsificare la traccia.'), sleep(5),
+	      nl, write('Rinuncio a dare esame in questa sessione...').

@@ -1,0 +1,86 @@
+:- dynamic ricevimento_con/1.
+:- dynamic disponibile/1.
+:- dynamic sincrono/1.
+:- dynamic deterministico/1.
+:- dynamic asincrono/1.
+:- dynamic non_deterministico/1.
+:- dynamic ho_salutato/1, ho_deciso/1.
+:- dynamic specifiche_pubblicate/1.
+:- dynamic pubblico/1.
+:- dynamic progetti_consegnati/1.
+
+progetti_consegnati([]).
+stato(sveglio).
+ho_salutato(no).
+ho_deciso(no).
+sincrono(1).
+sincrono(3).
+deterministico(7).
+specifiche_pubblicate(no).
+studente(studente1).
+studente(studente2).
+studente(studente3).
+
+
+sveglia :- stato(sveglio), ho_salutato(no).
+svegliaI :> sleep(10), write('Ciao a tutti, sono rientrato dalle ferie'), retract(ho_salutato(no)), assert(ho_salutato(si)).
+
+decido_se_pubblicare :- specifiche_pubblicate(no), ho_salutato(si), ho_deciso(no).
+decido_se_pubblicareI :> random(0,2,D), assert(pubblico(D)), write(D), nl, retract(ho_deciso(no)).
+
+pubblicoSpecifiche :- specifiche_pubblicate(no), ho_salutato(si), pubblico(D), D == 1.
+pubblicoSpecificheI :> write('Il progetto deve rappresentare un sistema asincrono e non deterministico. Dovete inviarmi la vostra proposta e io la valutero; se la boccio possiamo accordarci per un ricevimento alla fine del quale avrete la traccia su cui lavorare. Per la consegna potete inviarmi un messaggio con il link al repository contenente il programma. Buon lavoro!'), nl, retract(specifiche_pubblicate(no)), assert(specifiche_pubblicate(si)), broadcast.
+
+broadcast :- studente(S), messageA(S, send_message(pubblicazione, Me)), fail.
+
+
+sollecitoE :> write('Uno studente ha richiesto le specifiche. Eccole.'), nl, nl,
+	      retract(pubblico(D)), assert(pubblico(1)), pubblicoSpecifiche.
+
+
+propostaE(S, T) :> valutaA(S, T).
+valutaA(S, T) :> deterministico(T), write('Traccia '), write(T), write(' deterministica, non va bene'), 
+		 nl, nl, messageA(S, send_message(rifiutata, Me)).
+
+valutaA(S, T) :> sincrono(T), write('Traccia '), write(T), write(' sincrona, non va bene'), 
+		 nl, nl, messageA(S, send_message(rifiutata, Me)).  
+
+valutaA(S, T) :> write('La traccia '), write(T), write(' va bene'), nl, nl, 
+		 messageA(S, send_message(accettata, Me)), assert(assegnato(T, S)). 
+
+
+richiestaRicevimentoE(S) :> messageA(S, send_message(ricevimento(giovedi), Me)), assert(ricevimento_con(S)).
+
+
+updateE(F, T) :> u(F, T). 
+updateE(OldF, OldT, NewF, NewT) :> (d(OldF, OldT), u(NewF, NewT)). 
+
+u(F, T) :- ( F = sincrono  ->  assert(sincrono(T));   
+	     F = deterministico -> assert(deterministico(T));
+	     F = asincrono -> assert(asincrono(T));
+	     F = non_deterministico -> assert(non_deterministico(T))
+    	 ).
+
+d(F, T) :- ( F = sincrono  ->  retract(sincrono(T));   
+	     F = deterministico -> retract(deterministico(T));
+	     F = asincrono -> retract(asincrono(T));
+	     F = non_deterministico -> retract(non_deterministico(T))
+    	 ).
+
+consegnaE(Studente, Messaggio) :> progetti_consegnati(L), 
+				  append(L, [(Studente, Messaggio)], NewL), 
+				  retract(progetti_consegnati(L)), assert(progetti_consegnati(NewL)), 
+				  nl, write('Ho ricevuto i progetti di: '), write(NewL), nl.
+
+monitoroConsegne :- progetti_consegnati(L), length(L, Len), Len > 0.
+monitoroConsegneI :> progetti_consegnati(L), length(L, Len), Len > 1 -> correggoA(L).
+		       
+correggoA(L) :> nl, write('Correggo...'), nl, gestisciLista(L).
+
+gestisciLista([H|T]) :- nl, write('Sto valutando '), H = (S, M), write(S), write('-'), write(M), nl, 
+			random(1, 6, Voto), messageA(S, send_message(voto(Voto), Me)),
+			retract(progetti_consegnati([H|T])), assert(progetti_consegnati(T)), sleep(0.2),
+			random(0, 2, N), write(N), nl, length(T, Len),
+			(N == 1, Len > 0 -> gestisciLista(T); 
+				Len == 0 -> nl, write('Ho finito di correggere'), nl; 
+				nl, write('Mi fermo un attimo')), nl.

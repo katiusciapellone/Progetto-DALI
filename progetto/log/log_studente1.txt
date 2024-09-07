@@ -1,0 +1,2 @@
+send_message(send_message(proposta(studente1,5),_32669))
+send_message(send_message(consegna(studente1,link1),_32609))
