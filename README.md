@@ -1,6 +1,6 @@
 # Progetto DALI
 
-## Esame di Intelligent Agents nell'anno accademico 2023/2024
+## Esame di Intelligent Agents nell'anno accademico 2023/2024 - Univaq
 
 Il progetto è stato sviluppato su sistema operativo Windows usando la versione 4.6.0 di SICStus Prolog.
 
